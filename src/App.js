@@ -1,25 +1,138 @@
-import logo from './logo.svg';
+import Bar from './components/Bar';
+
+import BubbleSort from './algorithms/BubbleSort';
+
+import React, { Component } from 'react';
 import './App.css';
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+class App extends Component {
+  state = {
+    array: [],
+    steps: [], //array of array of elements(in each step)
+    colorKey: [], 
+    colors: [],//array of array of colorKey
+    timeouts: [],
+    currentStep: 0, 
+    count: 10, //number of elements
+    delay: 300, 
+    algorithm: '' 
+  }
+
+  componentDidMount() {
+    this.generateELements();
+  }
+
+  handleStart = () => {
+    let steps = this.state.steps; 
+    let colors = this.state.colors; 
+
+    this.clearTimeouts(); 
+    let timeouts = [];
+
+    let i = 0; 
+    while(i < steps.length - this.state.currentStep){
+      let timeout = setTimeout(()=>{
+        let currentStep = this.state.currentStep;
+        this.setState({
+          array: steps[currentStep],
+          colorKey: colors[currentStep],
+          currentStep: currentStep + 1
+
+        });
+        timeouts.push(timeout);
+      }, this.state.delay * i);
+      i++; 
+    }
+    this.setState({
+      timeouts: timeouts, 
+    });
+  }
+
+  //generates random number
+  generateRandomNumber = (min, max) =>{
+    return Math.floor(Math.random() * (max - min) + min);
+  }
+
+  generateSteps = () => {
+    let array = this.state.array.slice(); 
+    let steps = this.state.steps.slice(); 
+    let colors = this.state.colors.slice(); 
+
+    BubbleSort(array, 0, steps, colors);
+    this.setState({
+      steps: steps, 
+      colors: colors,
+    });
+  }
+
+  clearTimeouts = () => {
+    this.state.timeouts.forEach((timeout) => clearTimeout(timeout));
+    this.setState({ timeouts: []});
+  }
+
+  //0 not visited
+  //1 processed 
+  //2 completed
+  clearColorKey = () => {
+    let blank = new Array(this.state.count).fill(0);
+    this.setState({ colorKey: blank, colors: [blank]});
+  }
+
+
+
+  generateELements = () => {
+    this.clearTimeouts(); 
+    this.clearColorKey(); 
+
+    let count = this.state.count; 
+    let arr = []
+
+    for(let i = 0; i < count; i++){
+      arr.push(this.generateRandomNumber(5, 200))
+    }
+
+    this.setState({
+      array: arr, 
+      steps: [arr],
+      count: count, 
+      currentStep: 0
+    }, () => this.generateSteps());
+
+    //console.log(arr);
+  }
+
+  changeArray = (index, value) => {
+    let array = this.state.array;
+    array[index] = value; 
+    this.setState({
+      array: array, 
+      steps: [array], 
+      currentStep: 0
+    }, () => this.generateSteps());
+  }
+
+  render(){
+    const bars = this.state.array.map((value, index) =>{
+      return <Bar
+       key = {index} 
+       index = {index} 
+       length = {value} 
+       colorKey={this.state.colorKey[index]}
+       changeArray = {this.changeArray}
+       />;
+    }); 
+
+    return (
+      <div className = 'app'>
+        <div className = 'frame'>
+          <div className = 'card container'>
+            {bars}
+          </div>          
+        </div>
+        <button onClick ={this.handleStart}>Start</button>
+      </div> 
+    );   
+  }
 }
 
 export default App;
