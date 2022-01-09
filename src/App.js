@@ -129,7 +129,7 @@ class App extends Component {
             {bars}
           </div>          
         </div>
-        <button onClick ={this.handleStart}>Start</button>
+        <button className = 'startButton' onClick ={this.handleStart}>Start</button>
       </div> 
     );   
   }
